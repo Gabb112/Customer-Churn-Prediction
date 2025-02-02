@@ -24,7 +24,6 @@ def main():
     X_train, X_test, y_train, y_test, df_processed = data_processing.preprocess_data(
         df, spending_score_threshold
     )
-
     # Save processed data
     processed_data_path = os.path.join("data", "processed", "processed_data.csv")
     utils.save_data(df_processed, processed_data_path)
