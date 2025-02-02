@@ -21,7 +21,7 @@ def preprocess_data(df, spending_score_threshold):
     )
 
     # Handle Missing Values
-    for column in ["annual_income", "spending_score", "work_experience", "family_size"]:
+    for column in ["annual_income", "work_experience", "family_size"]:
         mean_value = df[column].mean()
         df[column] = df[column].fillna(mean_value)
     for column in ["Profession", "Gender"]:
@@ -36,10 +36,11 @@ def preprocess_data(df, spending_score_threshold):
     # Convert Gender into numerical features
     df["Gender"] = df["Gender"].replace({"Male": 1, "Female": 0})
 
-    # Target Variable Creation
+    # Target Variable Creation (Example: based on spending score)
     df["churn"] = df["spending_score"].apply(
         lambda score: 1 if score < spending_score_threshold else 0
     )
+    df.drop(columns="spending_score", inplace=True)  # Remove spending score
 
     # Feature Engineering: Age Groups
     bins = [18, 25, 35, 50, 65, 80]
@@ -50,6 +51,7 @@ def preprocess_data(df, spending_score_threshold):
     # Define features and target
     X = df.drop(columns="churn")
     y = df["churn"]
+
     # Define numerical and categorical columns
     numerical_cols = X.select_dtypes(include=np.number).columns.tolist()
     categorical_cols = X.select_dtypes(include="object").columns.tolist()
@@ -73,7 +75,7 @@ def preprocess_data(df, spending_score_threshold):
 
     # Train-test split after feature engineering
     X_train, X_test, y_train, y_test = train_test_split(
-        X_preprocessed, y, test_size=0.2, random_state=42
+        X_preprocessed, y, test_size=0.2, random_state=42, stratify=y
     )
 
     return X_train, X_test, y_train, y_test, df
