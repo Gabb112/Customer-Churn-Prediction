@@ -6,7 +6,9 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 
-def preprocess_data(df, spending_score_threshold):
+def preprocess_data(
+    df, spending_score_threshold, annual_income_threshold, work_experience_threshold
+):
     """Preprocesses data for model training."""
 
     # Rename the columns for more clarity
@@ -36,11 +38,20 @@ def preprocess_data(df, spending_score_threshold):
     # Convert Gender into numerical features
     df["Gender"] = df["Gender"].replace({"Male": 1, "Female": 0})
 
-    # Target Variable Creation (Example: based on spending score)
-    df["churn"] = df["spending_score"].apply(
-        lambda score: 1 if score < spending_score_threshold else 0
-    )
-    df.drop(columns="spending_score", inplace=True)  # Remove spending score
+    # Feature Engineering
+    df["income_per_family_size"] = df["annual_income"] / (df["family_size"] + 1e-6)
+    df["age_work_experience"] = df["Age"] * df["work_experience"]
+
+    # Target Variable Creation (More Complex Logic)
+    df["churn"] = (
+        (df["spending_score"] < spending_score_threshold)
+        & (df["annual_income"] < annual_income_threshold)
+        & (df["work_experience"] < work_experience_threshold)
+    ).astype(int)
+
+    df.drop(columns=["spending_score"], inplace=True)  # Remove spending score
+    df.drop(columns=["annual_income"], inplace=True)
+    df.drop(columns=["work_experience"], inplace=True)
 
     # Feature Engineering: Age Groups
     bins = [18, 25, 35, 50, 65, 80]
