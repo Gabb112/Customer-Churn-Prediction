@@ -13,8 +13,10 @@ This project demonstrates the end-to-end process of building a machine learning 
 *   Model selection and hyperparameter tuning
 *   Model training
 *   Model evaluation and visualization
+*   Handling class imbalance using resampling
 
 ## File Structure
+
 *   `data/raw`: Contains the original, raw data.
 *   `data/processed`: Contains the processed dataset used for the training of the model.
 *   `src`: Contains the Python modules used in the project.
@@ -49,8 +51,9 @@ The `data_processing.py` module handles the following:
 *   **Feature Transformation:**
     *   Converts the `Gender` column to numerical (0/1).
 *   **Target Variable Creation:**
-    *   Creates a `churn` variable by setting a threshold for the spending score, where customers with low spending scores are more likely to churn.
+    *   Creates a `churn` variable by combining `spending_score`, `annual_income` and `work_experience` with custom thresholds.
 *   **Feature Engineering:**
+    *   Creates `income_per_family_size` and `age_work_experience` as new features.
     *   Creates `age_groups` by bucketing the `Age` feature.
 *   **Preprocessing:**
     *   Standardizes numerical features using `StandardScaler`.
@@ -65,9 +68,15 @@ The `visualization.py` module performs the following:
 *   **Bivariate Analysis**: Plots a pairplot to see the correlations between features.
 *   **Correlation Heatmap**: Shows the correlation between all numerical features with a heatmap.
 
+## Data Resampling
+
+The `resampling.py` module handles the following:
+
+*   **Class Imbalance Handling:** Implements oversampling using `SMOTE` or undersampling using `RandomUnderSampler` to address class imbalance.
+
 ## Feature Selection
 
-The `feature_selection.py` module selects important features based on model feature importance. The features are selected based on the selected model which is passed as an argument to the function.
+The `feature_selection.py` module selects important features based on Recursive Feature Elimination (RFE), using different models.
 
 ## Model Selection and Training
 
@@ -75,9 +84,9 @@ The `model_selection.py` module performs hyperparameter tuning using a custom cr
 
 The following models are trained:
 
-*   **Logistic Regression:**  A linear model to classify customers based on the defined threshold.
+*   **Logistic Regression:** A linear model to classify customers based on the defined threshold.
 *   **Random Forest:** An ensemble method that uses multiple decision trees to get more accurate predictions.
-*   **XGBoost:**  A gradient-boosting algorithm.
+*   **XGBoost:** A gradient-boosting algorithm.
 
 ## Model Evaluation
 
@@ -87,7 +96,56 @@ The `model_evaluation.py` module evaluates the trained models using the test dat
 *   **Accuracy Score:** Shows the accuracy of the prediction.
 *   **Confusion Matrix**: Visual representation of the model's prediction accuracy.
 *   **ROC Curve and AUC Score:** Visualizes the model's ability to distinguish between the positive and negative classes.
-*   **Precision-Recall Curve and AUC-PR Score:** Visualizes the trade-off between precision and recall, useful when dealing with imbalanced datasets.
+*    **Precision-Recall Curve and AUC-PR Score:** Visualizes the trade-off between precision and recall, useful when dealing with imbalanced datasets.
+
+### Current Results
+
+After implementing the changes, the models achieved the following performance:
+
+*   **Logistic Regression:**
+    ```
+    Logistic Regression Metrics:
+                  precision    recall  f1-score   support
+
+               0       0.95      0.60      0.73       339
+               1       0.27      0.82      0.40        61
+
+        accuracy                           0.63       400
+       macro avg       0.61      0.71      0.57       400
+    weighted avg       0.84      0.63      0.68       400
+
+    Accuracy: 0.6325
+    ```
+*   **Random Forest:**
+    ```
+    Random Forest Metrics:
+                  precision    recall  f1-score   support
+
+               0       0.92      0.90      0.91       339
+               1       0.52      0.59      0.55        61
+
+        accuracy                           0.85       400
+       macro avg       0.72      0.75      0.73       400
+    weighted avg       0.86      0.85      0.86       400
+
+    Accuracy: 0.855
+    ```
+*   **XGBoost:**
+    ```
+    XGBoost Metrics:
+                  precision    recall  f1-score   support
+
+               0       0.93      0.88      0.90       339
+               1       0.48      0.61      0.54        61
+
+        accuracy                           0.84       400
+       macro avg       0.70      0.74      0.72       400
+    weighted avg       0.86      0.84      0.85       400
+
+    Accuracy: 0.84
+    ```
+
+    As we can see, the Random Forest is performing the best overall, with a high accuracy score. However, the f1-score for class 1 is still lower compared to class 0, highlighting a class imbalance problem.
 
 ## How to Run the Project
 
@@ -103,13 +161,19 @@ The `model_evaluation.py` module evaluates the trained models using the test dat
     python src/main.py
     ```
 
+## Project Report (Optional)
+
+If you have created a project report (`reports/report.md`), include key findings, challenges, and any recommendations.
+
 ## Future Work
 
-*   Explore more advanced feature engineering techniques.
-*   Try different machine learning models and hyperparameter tuning strategies.
+*   Fine-tune the model further to improve the f1 score for class 1.
+*   Explore more advanced feature engineering techniques, and features based on the business logic.
+*   Try different machine learning models and hyperparameter tuning strategies, focusing on Random Forest.
 *   Add external data to improve the predictions.
 *   Implement a way to save and load the models.
 *   Deploy the model in a more production environment using APIs.
+*  Explore Model interpretability techniques.
 
 ## Dependencies
 
@@ -122,3 +186,4 @@ The `model_evaluation.py` module evaluates the trained models using the test dat
 *   `kagglehub`
 *   `xgboost`
 *   `itertools`
+*   `imbalanced-learn`
