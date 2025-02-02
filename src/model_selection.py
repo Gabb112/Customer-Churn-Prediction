@@ -4,34 +4,31 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.metrics import f1_score
 import numpy as np
-import pandas as pd
 import itertools
-
+import pandas as pd
 
 def select_best_model_params(X_train, y_train):
     """Tunes hyperparameters using a custom cross-validation loop."""
 
     # Define Parameter Grids
     param_grid_lr = {
-        "C": [0.001, 0.01, 0.1, 1, 10, 100],
-        "penalty": ["l1", "l2"],
-        "class_weight": ["balanced", None],
+        'C': [0.001, 0.01, 0.1, 1, 10, 100],
+        'penalty': ['l1', 'l2'],
+        'class_weight': ['balanced', None]
     }
     param_grid_rf = {
-        "n_estimators": [100, 200, 300],
-        "max_depth": [5, 10, 15],
-        "min_samples_split": [2, 5, 10],
-        "min_samples_leaf": [1, 2, 4],
-        "class_weight": ["balanced", "balanced_subsample", None],
+        'n_estimators': [100, 200, 300],
+        'max_depth': [5, 10, 15],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4],
+        'class_weight': ['balanced', 'balanced_subsample', None]
     }
     param_grid_xgb = {
-        "n_estimators": [100, 200, 300],
-        "max_depth": [3, 5, 7],
-        "learning_rate": [0.01, 0.1, 0.2],
-        "subsample": [0.8, 1.0],
-        "colsample_bytree": [0.8, 1.0],
-        "use_label_encoder": [False],
-        "class_weight": ["balanced", None],
+        'n_estimators': [100, 200, 300],
+        'max_depth': [3, 5, 7],
+        'learning_rate': [0.01, 0.1, 0.2],
+        'subsample': [0.8, 1.0],
+        'colsample_bytree': [0.8, 1.0],
     }
 
     # Define Cross-Validation
@@ -39,7 +36,6 @@ def select_best_model_params(X_train, y_train):
 
     # Function to perform Grid Search on a single model
     def grid_search(X, y, model_type, param_grid):
-
         best_score = 0
         best_params = {}
         for params in parameter_grid_search(param_grid):
@@ -50,16 +46,16 @@ def select_best_model_params(X_train, y_train):
                 X_train_fold, X_val_fold = X.iloc[train_index], X.iloc[val_index]
                 y_train_fold, y_val_fold = y.iloc[train_index], y.iloc[val_index]
 
-                if model_type == "lr":
-                    model = LogisticRegression(
-                        **params, random_state=42, solver="liblinear"
-                    )
-                elif model_type == "rf":
+                if model_type == 'lr':
+                    model = LogisticRegression(**params, random_state=42, solver='liblinear')
+                elif model_type == 'rf':
                     model = RandomForestClassifier(**params, random_state=42)
-                elif model_type == "xgb":
-                    model = XGBClassifier(
-                        **params, random_state=42, eval_metric="logloss"
-                    )
+                elif model_type == 'xgb':
+                    if 'class_weight' in params and params['class_weight']:
+                        model = XGBClassifier(**params, random_state=42, eval_metric = 'logloss', class_weight = params['class_weight'])
+                    else:
+                        model = XGBClassifier(**params, random_state=42, eval_metric = 'logloss')
+
 
                 model.fit(X_train_fold, y_train_fold)
                 y_pred = model.predict(X_val_fold)
@@ -78,8 +74,8 @@ def select_best_model_params(X_train, y_train):
             yield dict(zip(keys, value_tuple))
 
     # Perform Grid Search for Each Model
-    best_params_lr = grid_search(pd.DataFrame(X_train), y_train, "lr", param_grid_lr)
-    best_params_rf = grid_search(pd.DataFrame(X_train), y_train, "rf", param_grid_rf)
-    best_params_xgb = grid_search(pd.DataFrame(X_train), y_train, "xgb", param_grid_xgb)
+    best_params_lr = grid_search(pd.DataFrame(X_train), y_train, 'lr', param_grid_lr)
+    best_params_rf = grid_search(pd.DataFrame(X_train), y_train, 'rf', param_grid_rf)
+    best_params_xgb = grid_search(pd.DataFrame(X_train), y_train, 'xgb', param_grid_xgb)
 
     return best_params_rf, best_params_lr, best_params_xgb
